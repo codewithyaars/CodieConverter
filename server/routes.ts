@@ -98,13 +98,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   async function convertPDFToJSON(conversionId: string, pdfBuffer: Buffer) {
+    // Store original console methods and stderr.write at function level
+    const originalWarn = console.warn;
+    const originalLog = console.log;
+    const originalStderrWrite = process.stderr.write;
+    
     try {
       // Update progress to 10%
       await storage.updateConversion(conversionId, { progress: 10 });
 
+      // Comprehensive warning suppression - override all output methods
+      console.warn = () => {}; // Completely suppress console.warn during PDF processing
+      console.log = (message: any, ...args: any[]) => {
+        const msgStr = String(message);
+        if (!msgStr.includes('TODO:') && !msgStr.includes('Warning:') && !msgStr.includes('graphic state operator')) {
+          originalLog(message, ...args);
+        }
+      };
+
+      // Override stderr.write to catch all warning output
+      process.stderr.write = function(chunk: any, encoding?: any, callback?: any): boolean {
+        const chunkStr = String(chunk);
+        if (chunkStr.includes('TODO:') || 
+            chunkStr.includes('Warning:') ||
+            chunkStr.includes('graphic state operator') ||
+            chunkStr.includes('SMask')) {
+          // Silently ignore these warnings
+          if (typeof callback === 'function') callback();
+          return true;
+        }
+        return originalStderrWrite.call(process.stderr, chunk, encoding, callback);
+      };
+
       const pdfParser = new PDFParser(null, true);
 
       pdfParser.on("pdfParser_dataError", async (errData: any) => {
+        // Restore console methods and stderr
+        console.warn = originalWarn;
+        console.log = originalLog;
+        process.stderr.write = originalStderrWrite;
         console.error("PDF parsing error:", errData);
         await storage.updateConversion(conversionId, {
           status: "failed",
@@ -114,6 +146,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       pdfParser.on("pdfParser_dataReady", async (pdfData) => {
+        // Restore console methods and stderr
+        console.warn = originalWarn;
+        console.log = originalLog;
+        process.stderr.write = originalStderrWrite;
         try {
           // Update progress to 80%
           await storage.updateConversion(conversionId, { progress: 80 });
@@ -149,6 +185,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }, 1000);
 
     } catch (error) {
+      // Restore console methods and stderr in case of error
+      console.warn = originalWarn;
+      console.log = originalLog;
+      process.stderr.write = originalStderrWrite;
       console.error("Conversion error:", error);
       await storage.updateConversion(conversionId, {
         status: "failed",

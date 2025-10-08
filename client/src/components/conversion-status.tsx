@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,16 +10,23 @@ interface ConversionStatusProps {
 }
 
 export default function ConversionStatus({ conversionId, onConversionComplete }: ConversionStatusProps) {
+  const [shouldPoll, setShouldPoll] = useState(true);
+  
   const { data: conversion, isLoading } = useQuery<Conversion>({
     queryKey: ["/api/conversions", conversionId],
     enabled: !!conversionId,
-    refetchInterval: conversionId ? 1000 : false, // Poll every second when active
+    refetchInterval: shouldPoll ? 3000 : false, // Poll every 3 seconds while processing
     refetchIntervalInBackground: false,
   });
 
   useEffect(() => {
     if (conversion?.status === "completed") {
+      setShouldPoll(false); // Stop polling when completed
       onConversionComplete();
+    } else if (conversion?.status === "failed") {
+      setShouldPoll(false); // Stop polling when failed
+    } else if (conversion?.status === "processing") {
+      setShouldPoll(true); // Continue polling while processing
     }
   }, [conversion?.status, onConversionComplete]);
 
