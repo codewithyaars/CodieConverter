@@ -54,6 +54,15 @@ export default function FileUpload({ onConversionStart }: FileUploadProps) {
   });
 
   const handleFileSelect = (file: File) => {
+    if (file.type !== 'application/pdf') {
+      toast({
+        title: "Invalid file type",
+        description: "Please select a PDF file. Other file types are not supported.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (file.size > 1000 * 1024 * 1024) {
       toast({
         title: "File too large",
