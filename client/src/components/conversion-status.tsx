@@ -8,7 +8,7 @@ interface ConversionStatusProps {
   conversionId: string | null;
   onConversionComplete: () => void;
 }
-
+/*Code is for Debug*/
 export default function ConversionStatus({ conversionId, onConversionComplete }: ConversionStatusProps) {
   const [shouldPoll, setShouldPoll] = useState(true);
   
