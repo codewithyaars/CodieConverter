@@ -1,15 +1,17 @@
 {
-  "version": 2,
+  "version": 3,
   "builds": [
     {
-      "src": "package.json",
-      "use": "@vercel/node"
+      "src": "server/index.ts",
+      "use": "@vercel/node",
+      "config": { "runtime": "nodejs22.x" }
+    },
+    {
+      "src": "client/dist/public/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "dist/server/index.js"
-    }
+    { "src": "/(.*)", "dest": "/server/index.ts" }
   ]
 }
