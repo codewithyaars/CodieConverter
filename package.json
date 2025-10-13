@@ -9,7 +9,7 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "build:client": "vite build --config vite.config.ts",
     "start:server": "node dist/index.js",
-    "build:server": "esbuild server/index.ts --platform=node --bundle --format=esm --outdir=dist",
+    "build:server": "esbuild server/index.ts --platform=node --bundle --format=esm --outdir=dist --external:@babel/preset-typescript --external:lightningcss",
     "build": "npm run build:client && npm run build:server",
     "start": "set NODE_ENV=production && node dist/index.js",
     "check": "tsc",
@@ -60,6 +60,7 @@
     "express-session": "^1.18.1",
     "framer-motion": "^11.13.1",
     "input-otp": "^1.4.2",
+    "lightningcss": "^1.30.2",
     "lucide-react": "^0.453.0",
     "memorystore": "^1.6.7",
     "multer": "^2.0.2",
@@ -86,6 +87,7 @@
     "zod-validation-error": "^3.4.0"
   },
   "devDependencies": {
+    "@babel/preset-typescript": "^7.27.1",
     "@replit/vite-plugin-cartographer": "^0.3.1",
     "@replit/vite-plugin-dev-banner": "^0.1.1",
     "@replit/vite-plugin-runtime-error-modal": "^0.0.3",
